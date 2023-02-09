@@ -52,6 +52,28 @@ fn should_encode_with_default_table() {
     }
 }
 
+
+#[cfg(feature = "alloc")]
+#[test]
+fn should_encode_with_default_table_vec() {
+    for (idx, (input, output)) in SAMPLE_DATA.iter().enumerate() {
+        let base64 = match based64::vec::encode(STANDARD_TABLE, input.as_bytes()) {
+            Some(result) => result,
+            None => panic!("base64 encode fails for idx={}", idx),
+        };
+        assert_eq!(base64.len(), output.len());
+        assert_eq!(base64, output.as_bytes());
+
+        assert_eq!(decode_len(&base64), input.len(), "decode_len() fails for idx={}", idx);
+        let decoded = match based64::vec::decode(STANDARD_TABLE, &base64) {
+            Some(decoded) => decoded,
+            None => panic!("base64 decode fails for idx={}", idx),
+        };
+        assert_eq!(decoded.len(), input.len());
+        assert_eq!(decoded, input.as_bytes());
+    }
+}
+
 #[test]
 fn should_raw_encode_with_default_table() {
     let mut buffer = [0u8; 4096];
@@ -73,6 +95,29 @@ fn should_raw_encode_with_default_table() {
         assert_eq!(decoded, input.as_bytes(), "base64 reverse decode wrongly idx={}", idx);
     }
 }
+
+#[test]
+fn should_raw_encode_with_default_table_vec() {
+    let mut buffer = [0u8; 4096];
+    let mut decoded = [0u8; 4096];
+    for (idx, (input, output)) in SAMPLE_DATA.iter().enumerate() {
+        let mut len = buffer.len();
+        let dst = core::ptr::NonNull::new(buffer.as_mut_ptr()).unwrap();
+        assert!(raw_encode(STANDARD_TABLE, input.as_bytes(), dst, &mut len), "base64 encode fails for idx={}", idx);
+        assert_eq!(len, output.len());
+        let base64 = &buffer[..len];
+        assert_eq!(base64, output.as_bytes());
+
+        let mut len = decoded.len();
+        let dst = core::ptr::NonNull::new(decoded.as_mut_ptr()).unwrap();
+        assert_eq!(decode_len(base64), input.len(), "decode_len() fails for idx={}", idx);
+        assert!(raw_decode(STANDARD_TABLE, base64, dst, &mut len), "base64 reverse decode fails for idx={}", idx);
+        assert_eq!(len, input.len(), "base64 reverse decode has invalid len for idx={}", idx);
+        let decoded = &decoded[..len];
+        assert_eq!(decoded, input.as_bytes(), "base64 reverse decode wrongly idx={}", idx);
+    }
+}
+
 
 #[test]
 fn should_raw_encode_all_ascii_with_default_table() {
@@ -123,5 +168,18 @@ fn verify_encode_safety() {
         getrandom::getrandom(src).expect("Random should work for fuck sake");
         assert!(encode(STANDARD_TABLE, src, dst).is_some(), "ENCODE SHOULD NOT FAIL");
         assert!(decode(STANDARD_TABLE, dst, src).is_some(), "DECODE SHOULD NOT FAIL");
+    }
+}
+
+#[cfg(feature = "alloc")]
+#[test]
+fn verify_encode_to_vec_safety() {
+    let mut src_buffer = [0u8; 500];
+    for idx in 1..src_buffer.len() {
+        let src = &mut src_buffer[idx..];
+        getrandom::getrandom(src).expect("Random should work for fuck sake");
+        let base64 = based64::vec::encode(STANDARD_TABLE, src).expect("ENCODE");
+        let original = based64::vec::decode(STANDARD_TABLE, &base64).expect("DECODE");
+        assert_eq!(src, original);
     }
 }

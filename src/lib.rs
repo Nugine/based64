@@ -6,6 +6,8 @@
 
 pub mod raw;
 pub mod uninit;
+#[cfg(feature = "alloc")]
+pub mod vec;
 
 use core::mem;
 

@@ -15,5 +15,8 @@ include = [
     "LICENSE",
 ]
 
+[features]
+alloc = []
+
 [dev-dependencies.getrandom]
 version = "0.2.6"

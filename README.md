@@ -5,3 +5,7 @@
 [![Documentation](https://docs.rs/based64/badge.svg)](https://docs.rs/crate/based64/)
 
 Simple Base64 functions for Rust chads.
+
+## Features
+
+- `alloc` - Enables usage of heap based collections;
