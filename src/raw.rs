@@ -107,12 +107,8 @@ pub fn decode(table: &[u8; 64], mut src: &[u8], dst: NonNull<u8>, len: &mut usiz
     let required_len = decode_len(src);
 
     if required_len == 0 {
-        if src.is_empty() {
-            *len = 0;
-            return true;
-        } else {
-            return unlikely_false();
-        }
+        *len = 0;
+        return true;
     }
 
     let mut cursor = dst.as_ptr();

@@ -1,4 +1,4 @@
-use based64::{STANDARD_TABLE};
+use based64::STANDARD_TABLE;
 use based64::{decode, encode, encode_len, decode_len};
 use based64::raw::encode as raw_encode;
 use based64::raw::decode as raw_decode;
