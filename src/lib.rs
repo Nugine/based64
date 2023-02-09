@@ -1,4 +1,7 @@
 //!BASE64 library for chads
+//!## Features
+//!
+//!- `alloc` - Enables usage of heap based collections;
 
 #![no_std]
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::style))]
