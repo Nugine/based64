@@ -157,8 +157,8 @@ fn should_encode_fail_all_ascii_with_default_table_on_buffer_overflow() {
 
 #[test]
 fn verify_encode_safety() {
-    let mut src_buffer = [0u8; 500];
-    let mut out_buffer = [0u8; 1000];
+    let mut src_buffer = [0u8; 1000];
+    let mut out_buffer = [0u8; 2000];
     for idx in 1..src_buffer.len() {
         let src = &mut src_buffer[idx..];
         let dst = &mut out_buffer[..encode_len(src.len())];

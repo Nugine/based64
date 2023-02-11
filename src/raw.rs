@@ -1,7 +1,7 @@
 //! Low level functions
 
 use core::ptr::NonNull;
-use super::{PAD, encode_len, decode_len};
+use super::{PAD, encode_len, decode_len, REVERSE_TABLE_SIZE, build_reverse_table, Codec};
 
 #[cold]
 #[inline(never)]
@@ -104,32 +104,10 @@ pub unsafe fn encode(table: &[u8; 64], src: &[u8], dst: NonNull<u8>, len: &mut u
     true
 }
 
-//reverse table is 0..=255
-const REVERSE_TABLE_SIZE: usize = (u8::max_value() as usize) + 1;
-#[inline(always)]
-const fn build_reverse_table(table: &[u8; 64]) -> [i8; REVERSE_TABLE_SIZE] {
-    let mut reverse_table = [-1i8; (u8::max_value() as usize) + 1];
-
-    let mut idx = 0;
-    loop {
-        let byte = table[idx] as usize;
-        reverse_table[byte] = idx as i8;
-        idx += 1;
-
-        if idx >= table.len() {
-            break;
-        }
-    }
-
-    reverse_table
-}
-
-pub(crate) fn decode_inner(table: &[u8; 64], mut src: &[u8], dst: NonNull<u8>, len: &mut usize) -> bool {
+pub(crate) fn decode_inner_with_rev(reverse_table: &[i8; REVERSE_TABLE_SIZE], mut src: &[u8], dst: NonNull<u8>, len: &mut usize) -> bool {
     let mut cursor = dst.as_ptr();
     let mut chunk = [0u8; 4];
     let mut chunk_len = 0;
-
-    let reverse_table = build_reverse_table(table);
 
     macro_rules! get_base64_byte {
         ($src:ident[$idx:literal]) => {{
@@ -197,6 +175,12 @@ pub(crate) fn decode_inner(table: &[u8; 64], mut src: &[u8], dst: NonNull<u8>, l
 
     *len = cursor as usize - dst.as_ptr() as usize;
     true
+
+}
+
+#[inline(always)]
+pub(crate) fn decode_inner(table: &[u8; 64], src: &[u8], dst: NonNull<u8>, len: &mut usize) -> bool {
+    decode_inner_with_rev(&build_reverse_table(table), src, dst, len)
 }
 
 #[inline]
@@ -220,4 +204,46 @@ pub unsafe fn decode(table: &[u8; 64], src: &[u8], dst: NonNull<u8>, len: &mut u
     }
 
     decode_inner(table, src, dst, len)
+}
+
+impl<'a> Codec<'a> {
+    #[inline(always)]
+    ///Raw encoding function.
+    ///
+    ///# Arguments
+    ///
+    ///- `src` - Input to encode;
+    ///- `dst` - Output to write;
+    ///- `len` - Output length, modified with required size regardless of outcome, unless calculation wrapping happens.
+    ///
+    ///# Result
+    ///Returns `true` on success.
+    ///
+    ///Returns `false` if buffer overflow would to happen or required_len is too big.
+    pub unsafe fn encode_to_raw(&self, src: &[u8], dst: NonNull<u8>, len: &mut usize) -> bool {
+        encode(self.table, src, dst, len)
+    }
+
+    #[inline]
+    ///Raw decoding function.
+    ///
+    ///# Arguments
+    ///- `src` - Input to decode;
+    ///- `dst` - Output to write;
+    ///- `len` - Output length, modified with required size regardless of outcome.
+    ///
+    ///# Result
+    ///Returns `true` on success.
+    ///
+    ///Returns `false` if buffer overflow would to happen or `src` is empty or invalid base64.
+    pub unsafe fn decode_to_raw(&self, src: &[u8], dst: NonNull<u8>, len: &mut usize) -> bool {
+        let required_len = decode_len(src);
+
+        if required_len == 0 {
+            *len = 0;
+            return true;
+        }
+
+        decode_inner_with_rev(&self.reverse, src, dst, len)
+    }
 }

@@ -30,6 +30,10 @@ pub const PAD: u8 = b'=';
 pub static STANDARD_TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 ///Alternative table URL safe.
 pub static URL_TABLE: &[u8; 64] = b"ABCDEFGHIJLKMNOPQRSTUVWXYZabcdefghijlkmnopqrstuvwxyz0123456789-_";
+///Codec which uses `STANDARD_TABLE`
+pub static STANDARD_CODEC: Codec<'static> = Codec::new(STANDARD_TABLE);
+///Codec which uses `URL_TABLE`
+pub static URL_CODEC: Codec<'static> = Codec::new(URL_TABLE);
 
 #[inline]
 ///Validates custom character table by requiring user to provide table of specific size
@@ -46,6 +50,27 @@ pub const fn assert_valid_character_table(table: &[u8; 64]) -> bool {
 
     true
 }
+
+const REVERSE_TABLE_SIZE: usize = (u8::max_value() as usize) + 1;
+#[inline(always)]
+const fn build_reverse_table(table: &[u8; 64]) -> [i8; REVERSE_TABLE_SIZE] {
+    let mut reverse_table = [-1i8; (u8::max_value() as usize) + 1];
+
+    let mut idx = 0;
+    loop {
+        let byte = table[idx] as usize;
+        reverse_table[byte] = idx as i8;
+        idx += 1;
+
+        if idx >= table.len() {
+            break;
+        }
+    }
+
+    reverse_table
+}
+
+
 
 #[inline(always)]
 ///Returns number of bytes necessary to encode input of provided size (including padding).
@@ -118,5 +143,61 @@ pub fn encode(table: &[u8; 64], src: &[u8], dst: &mut [u8]) -> Option<usize> {
 pub fn decode(table: &[u8; 64], src: &[u8], dst: &mut [u8]) -> Option<usize> {
     unsafe {
         uninit::decode(table, src, mem::transmute(dst))
+    }
+}
+
+
+///BASE64 codec
+#[derive(Copy, Clone)]
+pub struct Codec<'a> {
+    table: &'a [u8; 64],
+    reverse: [i8; REVERSE_TABLE_SIZE]
+}
+
+impl<'a> Codec<'a> {
+    ///Creates new codec, validating that table contains only ASCII characters.
+    pub const fn new(table: &'a [u8; 64]) -> Self {
+        assert!(assert_valid_character_table(table));
+        Self {
+            table,
+            reverse: build_reverse_table(table),
+        }
+    }
+}
+
+impl<'a> Codec<'a> {
+    ///Encoding function writing to slice.
+    ///
+    ///# Arguments
+    ///
+    ///- `src` - Input to encode;
+    ///- `dst` - Output to write;
+    ///
+    ///# Result
+    ///
+    ///Returns `Some` if successful, containing number of bytes written.
+    ///
+    ///Returns `None` if data cannot be encoded due to insufficient buffer size or size calculation overflow happens.
+    #[inline(always)]
+    pub fn encode_to(&self, src: &[u8], dst: &mut [u8]) -> Option<usize> {
+        encode(self.table, src, dst)
+    }
+
+    ///Decoding function writing to slice.
+    ///
+    ///# Arguments
+    ///
+    ///- `src` - Input to decode;
+    ///- `dst` - Output to write;
+    ///
+    ///# Result
+    ///Returns `Some` if successful, containing number of bytes written.
+    ///
+    ///Returns `None` if data cannot be encoded due to insufficient buffer size or invalid input.
+    #[inline]
+    pub fn decode_to(&self, src: &[u8], dst: &mut [u8]) -> Option<usize> {
+        unsafe {
+            self.decode_to_uninit(src, mem::transmute(dst))
+        }
     }
 }

@@ -12,7 +12,14 @@ fn handling_pad_middle() {
     let mut buffer = [0u8; 64];
     assert_eq!(decode(STANDARD_TABLE, INPUT.as_bytes(), &mut buffer), Some(EXPECTED.len()));
     assert_eq!(&buffer[..EXPECTED.len()], EXPECTED.as_bytes());
+    buffer.fill(0);
+    assert_eq!(based64::STANDARD_CODEC.decode_to(INPUT.as_bytes(), &mut buffer), Some(EXPECTED.len()));
+    assert_eq!(&buffer[..EXPECTED.len()], EXPECTED.as_bytes());
+    buffer.fill(0);
     assert_eq!(decode(URL_TABLE, INPUT.as_bytes(), &mut buffer), Some(EXPECTED.len()));
+    assert_eq!(&buffer[..EXPECTED.len()], EXPECTED.as_bytes());
+    buffer.fill(0);
+    assert_eq!(based64::URL_CODEC.decode_to(INPUT.as_bytes(), &mut buffer), Some(EXPECTED.len()));
     assert_eq!(&buffer[..EXPECTED.len()], EXPECTED.as_bytes());
 }
 
@@ -22,7 +29,9 @@ fn should_fail_on_invalid_char() {
 
     let mut buffer = [0u8; 64];
     assert_eq!(decode(STANDARD_TABLE, &INPUT, &mut buffer), None);
+    assert_eq!(based64::STANDARD_CODEC.decode_to(&INPUT, &mut buffer), None);
     assert_eq!(decode(URL_TABLE, &INPUT, &mut buffer), None);
+    assert_eq!(based64::URL_CODEC.decode_to(&INPUT, &mut buffer), None);
 }
 
 #[test]
@@ -38,7 +47,14 @@ fn should_correctly_decode_single_chunk_padded() {
     for (input, expected) in INPUT {
         let size = decode(STANDARD_TABLE, input.as_bytes(), &mut buffer).expect("to decode padded chunk");
         assert_eq!(&buffer[..size], expected.as_bytes());
+        buffer.fill(0);
+        let size = based64::STANDARD_CODEC.decode_to(input.as_bytes(), &mut buffer).expect("to decode padded chunk");
+        assert_eq!(&buffer[..size], expected.as_bytes());
+        buffer.fill(0);
         let size = decode(URL_TABLE, input.as_bytes(), &mut buffer).expect("to decode padded chunk");
+        assert_eq!(&buffer[..size], expected.as_bytes());
+        buffer.fill(0);
+        let size = based64::URL_CODEC.decode_to(input.as_bytes(), &mut buffer).expect("to decode padded chunk");
         assert_eq!(&buffer[..size], expected.as_bytes());
     }
 }
@@ -49,7 +65,9 @@ fn should_handle_decode_padding_only() {
     for idx in 1..buffer.len() {
         let input = "=".repeat(idx);
         assert_eq!(decode(STANDARD_TABLE, input.as_bytes(), &mut buffer), Some(0));
+        assert_eq!(based64::STANDARD_CODEC.decode_to(input.as_bytes(), &mut buffer), Some(0));
         assert_eq!(decode(URL_TABLE, input.as_bytes(), &mut buffer), Some(0));
+        assert_eq!(based64::URL_CODEC.decode_to(input.as_bytes(), &mut buffer), Some(0));
     }
 }
 
@@ -70,6 +88,8 @@ fn should_decode() {
         let size = decode(STANDARD_TABLE, input.as_bytes(), &mut buffer).expect("decode valid base64");
         let result = core::str::from_utf8(&buffer[..size]).unwrap();
         assert_eq!(result, expected);
+        let result = based64::STANDARD_CODEC.encode_into_string(result.as_bytes());
+        assert_eq!(result, input);
     }
 
 }
@@ -94,5 +114,6 @@ fn should_decode_big_unpadded() {
     for idx in 100_000..=100_900 {
         let input = generate_b64_data(idx);
         based64::vec::decode(STANDARD_TABLE, input.as_bytes()).unwrap();
+        based64::STANDARD_CODEC.decode_into_vec(input.as_bytes()).unwrap();
     }
 }
