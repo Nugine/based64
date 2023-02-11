@@ -10,6 +10,7 @@
 //!- [uninit](uninit) - Contains functions to work with unintialized slices.
 //!- [vec](vec) - Contains high level functions that returns `Vec`. Requires `alloc` feature.
 //!- [string](string) - Contains high level functions that returns `String`. Requires `alloc` feature.
+//!- [Codec](Codec) - Wrapper that allows to pre-built lookup table for decoding. Useful if you want to safe tiny bit on building lookup table.
 
 #![no_std]
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::style))]
@@ -155,6 +156,7 @@ pub struct Codec<'a> {
 }
 
 impl<'a> Codec<'a> {
+    #[inline(always)]
     ///Creates new codec, validating that table contains only ASCII characters.
     pub const fn new(table: &'a [u8; 64]) -> Self {
         assert!(assert_valid_character_table(table));
@@ -162,6 +164,18 @@ impl<'a> Codec<'a> {
             table,
             reverse: build_reverse_table(table),
         }
+    }
+
+    #[inline(always)]
+    ///Access prebuilt instance of codec with `STANDARD_TABLE`
+    pub fn standard() -> &'static Codec<'static> {
+        &STANDARD_CODEC
+    }
+
+    #[inline(always)]
+    ///Access prebuilt instance of codec with `URL_TABLE`
+    pub fn url_usafe() -> &'static Codec<'static> {
+        &URL_CODEC
     }
 }
 

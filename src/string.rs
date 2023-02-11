@@ -1,3 +1,5 @@
+//! API that returns `String`
+
 extern crate alloc;
 use alloc::string::String;
 
