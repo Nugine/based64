@@ -18,8 +18,9 @@ use super::{encode_len, decode_len, raw};
 #[inline]
 pub fn encode(table: &[u8; 64], src: &[u8]) -> Vec<u8> {
     let mut required_len = encode_len(src.len());
-    //>= for case of 0
-    assert!(required_len >= src.len(), "Required length overflow");
+    //Make sure that we don't overflow (which is unlikely but still)
+    //>= for case of zero sized input
+    assert!(required_len >= src.len());
 
     let mut result = Vec::with_capacity(required_len);
     unsafe {

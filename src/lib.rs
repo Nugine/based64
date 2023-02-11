@@ -8,7 +8,8 @@
 //!
 //!- [raw](raw) - Contains functions to work with raw pointers. Mostly unsafe.
 //!- [uninit](uninit) - Contains functions to work with unintialized slices.
-//!- [vec](vec) - Contains high level functions with simplified API. Requires `alloc` feature.
+//!- [vec](vec) - Contains high level functions that returns `Vec`. Requires `alloc` feature.
+//!- [string](string) - Contains high level functions that returns `String`. Requires `alloc` feature.
 
 #![no_std]
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::style))]
@@ -18,6 +19,8 @@ pub mod raw;
 pub mod uninit;
 #[cfg(feature = "alloc")]
 pub mod vec;
+#[cfg(feature = "alloc")]
+pub mod string;
 
 use core::mem;
 

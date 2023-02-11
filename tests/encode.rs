@@ -171,12 +171,14 @@ fn verify_encode_safety() {
 #[cfg(feature = "alloc")]
 #[test]
 fn verify_encode_to_vec_safety() {
-    let mut src_buffer = [0u8; 500];
+    let mut src_buffer = [0u8; 2000];
     for idx in 1..src_buffer.len() {
         let src = &mut src_buffer[idx..];
         getrandom::getrandom(src).expect("Random should work for fuck sake");
         let base64 = based64::vec::encode(STANDARD_TABLE, src);
         let original = based64::vec::decode(STANDARD_TABLE, &base64).expect("DECODE");
         assert_eq!(src, original);
+        let base64_string = core::str::from_utf8(&base64).unwrap();
+        assert_eq!(based64::string::encode(STANDARD_TABLE, src), base64_string);
     }
 }
