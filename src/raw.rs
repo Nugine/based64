@@ -113,7 +113,7 @@ const fn build_reverse_table(table: &[u8; 64]) -> [i8; REVERSE_TABLE_SIZE] {
     let mut idx = 0;
     loop {
         let byte = table[idx] as usize;
-        reverse_table[byte as usize] = idx as i8;
+        reverse_table[byte] = idx as i8;
         idx += 1;
 
         if idx >= table.len() {
