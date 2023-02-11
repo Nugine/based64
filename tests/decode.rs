@@ -71,4 +71,28 @@ fn should_decode() {
         let result = core::str::from_utf8(&buffer[..size]).unwrap();
         assert_eq!(result, expected);
     }
+
+}
+
+#[cfg(feature = "alloc")]
+#[test]
+fn should_decode_big_unpadded() {
+    fn generate_b64_data(size: usize) -> String {
+        fn match_idx(idx: usize) -> char {
+            match (idx % 64) as u8 {
+                v @ 0..=25 => (v + 'A' as u8) as char,
+                v @ 26..=51 => (v - 26 + 'a' as u8) as char,
+                v @ 52..=61 => (v - 52 + '0' as u8) as char,
+                62 => '+',
+                _ => '/',
+            }
+        }
+
+        (0..size).map(match_idx).collect()
+    }
+
+    for idx in 100_000..=100_900 {
+        let input = generate_b64_data(idx);
+        based64::vec::decode(STANDARD_TABLE, input.as_bytes()).unwrap();
+    }
 }

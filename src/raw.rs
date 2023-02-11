@@ -104,10 +104,32 @@ pub unsafe fn encode(table: &[u8; 64], src: &[u8], dst: NonNull<u8>, len: &mut u
     true
 }
 
+//reverse table is 0..=255
+const REVERSE_TABLE_SIZE: usize = (u8::max_value() as usize) + 1;
+#[inline(always)]
+const fn build_reverse_table(table: &[u8; 64]) -> [i8; REVERSE_TABLE_SIZE] {
+    let mut reverse_table = [-1i8; (u8::max_value() as usize) + 1];
+
+    let mut idx = 0;
+    loop {
+        let byte = table[idx] as usize;
+        reverse_table[byte as usize] = idx as i8;
+        idx += 1;
+
+        if idx >= table.len() {
+            break;
+        }
+    }
+
+    reverse_table
+}
+
 pub(crate) fn decode_inner(table: &[u8; 64], mut src: &[u8], dst: NonNull<u8>, len: &mut usize) -> bool {
     let mut cursor = dst.as_ptr();
     let mut chunk = [0u8; 4];
     let mut chunk_len = 0;
+
+    let reverse_table = build_reverse_table(table);
 
     macro_rules! get_base64_byte {
         ($src:ident[$idx:literal]) => {{
@@ -119,10 +141,13 @@ pub(crate) fn decode_inner(table: &[u8; 64], mut src: &[u8], dst: NonNull<u8>, l
                 },
             };
 
-            match table.iter().position(|&b| b == ch) {
-                Some(pos) => pos as u8,
-                None => return unlikely_false(),
+            let pos = unsafe {
+                reverse_table.get_unchecked(ch as usize)
+            };
+            if *pos == -1 {
+                return unlikely_false()
             }
+            *pos as u8
         }}
     }
 

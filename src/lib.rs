@@ -56,11 +56,21 @@ pub const fn encode_len(input: usize) -> usize {
 }
 
 ///Returns number of bytes necessary to decode provided input.
+///
+///In case of not rounded input, assumes the worst.
 pub const fn decode_len(input: &[u8]) -> usize {
     let len = input.len();
-    if len == 0 || (len & 3 != 0) {
-        0
-    } else {       //len / 4 * 3
+    if len == 0 {
+        return 0
+    }
+
+    let unused_num = len & 3;
+    if unused_num != 0 {
+        //unpadded (probably)
+        len.wrapping_div(4).wrapping_mul(3) + unused_num
+    } else {
+        //padded so it is simply
+        //len / 4 * 3
         let result = len.wrapping_div(4).wrapping_mul(3);
         if input[len - 1] != PAD {
             result
