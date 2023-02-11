@@ -9,24 +9,7 @@ fn unlikely_false() -> bool {
     false
 }
 
-///Raw encoding function.
-///
-///`src` - Input to encode;
-///`dst` - Output to write;
-///`len` - Output length, modified with required size regardless of outcome, unless calculation wrapping happens.
-///
-///Returns `true` on success.
-///Returns `false` if buffer overflow would to happen or required_len is too big.
-pub fn encode(table: &[u8; 64], src: &[u8], dst: NonNull<u8>, len: &mut usize) -> bool {
-    let required_len = encode_len(src.len());
-    if required_len < src.len() {
-        //bro, how likely is overflow?
-        return unlikely_false();
-    } else if required_len > *len {
-        *len = required_len;
-        return false;
-    }
-
+pub(crate) fn encode_inner(table: &[u8; 64], src: &[u8], dst: NonNull<u8>, len: &mut usize) -> bool {
     let mut it = src.as_ptr();
     let it_end = unsafe {
         it.add(src.len())
@@ -95,22 +78,33 @@ pub fn encode(table: &[u8; 64], src: &[u8], dst: NonNull<u8>, len: &mut usize) -
     true
 }
 
-///Raw decoding function.
+#[inline]
+///Raw encoding function.
 ///
-///`src` - Input to decode;
-///`dst` - Output to write;
-///`len` - Output length, modified with required size regardless of outcome.
+///# Arguments
 ///
+///- `src` - Input to encode;
+///- `dst` - Output to write;
+///- `len` - Output length, modified with required size regardless of outcome, unless calculation wrapping happens.
+///
+///# Result
 ///Returns `true` on success.
-///Returns `false` if buffer overflow would to happen or `src` is empty or invalid base64.
-pub fn decode(table: &[u8; 64], mut src: &[u8], dst: NonNull<u8>, len: &mut usize) -> bool {
-    let required_len = decode_len(src);
-
-    if required_len == 0 {
-        *len = 0;
-        return true;
+///
+///Returns `false` if buffer overflow would to happen or required_len is too big.
+pub unsafe fn encode(table: &[u8; 64], src: &[u8], dst: NonNull<u8>, len: &mut usize) -> bool {
+    let required_len = encode_len(src.len());
+    if required_len < src.len() {
+        //bro, how likely is overflow?
+        return unlikely_false();
+    } else if required_len > *len {
+        *len = required_len;
+        return false;
     }
 
+    encode_inner(table, src, dst, len)
+}
+
+pub(crate) fn decode_inner(table: &[u8; 64], mut src: &[u8], dst: NonNull<u8>, len: &mut usize) -> bool {
     let mut cursor = dst.as_ptr();
     let mut chunk = [0u8; 4];
     let mut chunk_len = 0;
@@ -178,4 +172,27 @@ pub fn decode(table: &[u8; 64], mut src: &[u8], dst: NonNull<u8>, len: &mut usiz
 
     *len = cursor as usize - dst.as_ptr() as usize;
     true
+}
+
+#[inline]
+///Raw decoding function.
+///
+///# Arguments
+///- `src` - Input to decode;
+///- `dst` - Output to write;
+///- `len` - Output length, modified with required size regardless of outcome.
+///
+///# Result
+///Returns `true` on success.
+///
+///Returns `false` if buffer overflow would to happen or `src` is empty or invalid base64.
+pub unsafe fn decode(table: &[u8; 64], src: &[u8], dst: NonNull<u8>, len: &mut usize) -> bool {
+    let required_len = decode_len(src);
+
+    if required_len == 0 {
+        *len = 0;
+        return true;
+    }
+
+    decode_inner(table, src, dst, len)
 }

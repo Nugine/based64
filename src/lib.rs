@@ -1,7 +1,14 @@
 //!BASE64 library for chads
+//!
 //!## Features
 //!
 //!- `alloc` - Enables usage of heap based collections;
+//!
+//!## API
+//!
+//!- [raw](raw) - Contains functions to work with raw pointers. Mostly unsafe.
+//!- [uninit](uninit) - Contains functions to work with unintialized slices.
+//!- [vec](vec) - Contains high level functions with simplified API. Requires `alloc` feature.
 
 #![no_std]
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::style))]
@@ -21,6 +28,7 @@ pub static STANDARD_TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklm
 ///Alternative table URL safe.
 pub static URL_TABLE: &[u8; 64] = b"ABCDEFGHIJLKMNOPQRSTUVWXYZabcdefghijlkmnopqrstuvwxyz0123456789-_";
 
+#[inline]
 ///Validates custom character table by requiring user to provide table of specific size
 ///containing only ASCII characters.
 pub const fn assert_valid_character_table(table: &[u8; 64]) -> bool {
@@ -65,10 +73,15 @@ pub const fn decode_len(input: &[u8]) -> usize {
 
 ///Encoding function writing to slice.
 ///
-///`src` - Input to encode;
-///`dst` - Output to write;
+///# Arguments
+///
+///- `src` - Input to encode;
+///- `dst` - Output to write;
+///
+///# Result
 ///
 ///Returns `Some` if successful, containing number of bytes written.
+///
 ///Returns `None` if data cannot be encoded due to insufficient buffer size or size calculation overflow happens.
 #[inline]
 pub fn encode(table: &[u8; 64], src: &[u8], dst: &mut [u8]) -> Option<usize> {
@@ -79,10 +92,14 @@ pub fn encode(table: &[u8; 64], src: &[u8], dst: &mut [u8]) -> Option<usize> {
 
 ///Decoding function writing to slice.
 ///
-///`src` - Input to decode;
-///`dst` - Output to write;
+///# Arguments
 ///
+///- `src` - Input to decode;
+///- `dst` - Output to write;
+///
+///# Result
 ///Returns `Some` if successful, containing number of bytes written.
+///
 ///Returns `None` if data cannot be encoded due to insufficient buffer size.
 #[inline]
 pub fn decode(table: &[u8; 64], src: &[u8], dst: &mut [u8]) -> Option<usize> {

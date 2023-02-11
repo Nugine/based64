@@ -81,7 +81,7 @@ fn should_raw_encode_with_default_table() {
     for (idx, (input, output)) in SAMPLE_DATA.iter().enumerate() {
         let mut len = buffer.len();
         let dst = core::ptr::NonNull::new(buffer.as_mut_ptr()).unwrap();
-        assert!(raw_encode(STANDARD_TABLE, input.as_bytes(), dst, &mut len), "base64 encode fails for idx={}", idx);
+        assert!(unsafe { raw_encode(STANDARD_TABLE, input.as_bytes(), dst, &mut len) }, "base64 encode fails for idx={}", idx);
         assert_eq!(len, output.len());
         let base64 = &buffer[..len];
         assert_eq!(base64, output.as_bytes());
@@ -89,7 +89,7 @@ fn should_raw_encode_with_default_table() {
         let mut len = decoded.len();
         let dst = core::ptr::NonNull::new(decoded.as_mut_ptr()).unwrap();
         assert_eq!(decode_len(base64), input.len(), "decode_len() fails for idx={}", idx);
-        assert!(raw_decode(STANDARD_TABLE, base64, dst, &mut len), "base64 reverse decode fails for idx={}", idx);
+        assert!(unsafe { raw_decode(STANDARD_TABLE, base64, dst, &mut len) }, "base64 reverse decode fails for idx={}", idx);
         assert_eq!(len, input.len(), "base64 reverse decode has invalid len for idx={}", idx);
         let decoded = &decoded[..len];
         assert_eq!(decoded, input.as_bytes(), "base64 reverse decode wrongly idx={}", idx);
@@ -103,7 +103,7 @@ fn should_raw_encode_with_default_table_vec() {
     for (idx, (input, output)) in SAMPLE_DATA.iter().enumerate() {
         let mut len = buffer.len();
         let dst = core::ptr::NonNull::new(buffer.as_mut_ptr()).unwrap();
-        assert!(raw_encode(STANDARD_TABLE, input.as_bytes(), dst, &mut len), "base64 encode fails for idx={}", idx);
+        assert!(unsafe { raw_encode(STANDARD_TABLE, input.as_bytes(), dst, &mut len) }, "base64 encode fails for idx={}", idx);
         assert_eq!(len, output.len());
         let base64 = &buffer[..len];
         assert_eq!(base64, output.as_bytes());
@@ -111,7 +111,7 @@ fn should_raw_encode_with_default_table_vec() {
         let mut len = decoded.len();
         let dst = core::ptr::NonNull::new(decoded.as_mut_ptr()).unwrap();
         assert_eq!(decode_len(base64), input.len(), "decode_len() fails for idx={}", idx);
-        assert!(raw_decode(STANDARD_TABLE, base64, dst, &mut len), "base64 reverse decode fails for idx={}", idx);
+        assert!(unsafe { raw_decode(STANDARD_TABLE, base64, dst, &mut len) }, "base64 reverse decode fails for idx={}", idx);
         assert_eq!(len, input.len(), "base64 reverse decode has invalid len for idx={}", idx);
         let decoded = &decoded[..len];
         assert_eq!(decoded, input.as_bytes(), "base64 reverse decode wrongly idx={}", idx);
@@ -125,14 +125,14 @@ fn should_raw_encode_all_ascii_with_default_table() {
     let mut decoded = [0u8; ALL_ASCII.len()];
     let mut len = buffer.len();
     let dst = core::ptr::NonNull::new(buffer.as_mut_ptr()).unwrap();
-    assert!(raw_encode(STANDARD_TABLE, &ALL_ASCII, dst, &mut len), "base64 encode fails for all ASCII. Required len={} but len={}", len, buffer.len());
+    assert!(unsafe { raw_encode(STANDARD_TABLE, &ALL_ASCII, dst, &mut len) }, "base64 encode fails for all ASCII. Required len={} but len={}", len, buffer.len());
     assert_eq!(len, ALL_ASCII_EXPECTED.len());
     let base64 = &buffer[..len];
     assert_eq!(base64, ALL_ASCII_EXPECTED);
 
     let mut len = decoded.len();
     let dst = core::ptr::NonNull::new(decoded.as_mut_ptr()).unwrap();
-    assert!(raw_decode(STANDARD_TABLE, base64, dst, &mut len), "base64 decode fails for all ASCII. Required len={} but len={}", len, decoded.len());
+    assert!(unsafe { raw_decode(STANDARD_TABLE, base64, dst, &mut len) }, "base64 decode fails for all ASCII. Required len={} but len={}", len, decoded.len());
     assert_eq!(len, ALL_ASCII.len());
     let decoded = &decoded[..len];
     assert_eq!(decoded, ALL_ASCII);
@@ -144,7 +144,7 @@ fn should_raw_encode_fail_all_ascii_with_default_table_on_buffer_overflow() {
     let dst = core::ptr::NonNull::new(buffer.as_mut_ptr()).unwrap();
     for idx in 1..ALL_ASCII_EXPECTED.len() {
         let mut len = buffer.len() - idx;
-        assert!(!raw_encode(STANDARD_TABLE, &ALL_ASCII, dst, &mut len), "base64 encode should fail, but it is successful");
+        assert!(unsafe { !raw_encode(STANDARD_TABLE, &ALL_ASCII, dst, &mut len) }, "base64 encode should fail, but it is successful");
         assert_eq!(len, ALL_ASCII_EXPECTED.len());
     }
 }

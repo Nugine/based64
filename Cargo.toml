@@ -1,6 +1,6 @@
 [package]
 name = "based64"
-version = "0.1.2"
+version = "0.2.0"
 edition = "2018"
 description = "BASE64 implementation for chads"
 readme = "README.md"
