@@ -100,7 +100,7 @@ pub fn encode(table: &[u8; 64], src: &[u8], dst: &mut [u8]) -> Option<usize> {
 ///# Result
 ///Returns `Some` if successful, containing number of bytes written.
 ///
-///Returns `None` if data cannot be encoded due to insufficient buffer size.
+///Returns `None` if data cannot be encoded due to insufficient buffer size or invalid input.
 #[inline]
 pub fn decode(table: &[u8; 64], src: &[u8], dst: &mut [u8]) -> Option<usize> {
     unsafe {

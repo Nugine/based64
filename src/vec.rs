@@ -12,26 +12,23 @@ use super::{encode_len, decode_len, raw};
 ///# Arguments
 ///- `src` - Input to encode;
 ///
-///# Result
+///# Panics
 ///
-///Returns `Some` if successful, containing encoded output
-///
-///Returns `None` if data cannot be encoded due to insufficient buffer size or size calculation overflow happens.
+///In case of required size to be too big
 #[inline]
-pub fn encode(table: &[u8; 64], src: &[u8]) -> Option<Vec<u8>> {
+pub fn encode(table: &[u8; 64], src: &[u8]) -> Vec<u8> {
     let mut required_len = encode_len(src.len());
+    //>= for case of 0
+    assert!(required_len >= src.len(), "Required length overflow");
+
     let mut result = Vec::with_capacity(required_len);
     unsafe {
         let ptr = core::ptr::NonNull::new_unchecked(result.as_mut_ptr());
-        match raw::encode_inner(table, src, ptr, &mut required_len) {
-            true => {
-                result.set_len(required_len);
-            },
-            false => return None,
-        }
+        raw::encode_inner(table, src, ptr, &mut required_len);
+        result.set_len(required_len);
     }
 
-    Some(result)
+    result
 }
 
 ///Decoding function returns vector with data written.
@@ -46,7 +43,7 @@ pub fn encode(table: &[u8; 64], src: &[u8]) -> Option<Vec<u8>> {
 ///
 ///Returns `Some` if successful, containing decoded output
 ///
-///Returns `None` if data cannot be encoded due to insufficient buffer size.
+///Returns `None` if `src` is invalid input.
 #[inline]
 pub fn decode(table: &[u8; 64], src: &[u8]) -> Option<Vec<u8>> {
     let mut required_len = decode_len(src);

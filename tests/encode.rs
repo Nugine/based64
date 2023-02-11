@@ -57,10 +57,7 @@ fn should_encode_with_default_table() {
 #[test]
 fn should_encode_with_default_table_vec() {
     for (idx, (input, output)) in SAMPLE_DATA.iter().enumerate() {
-        let base64 = match based64::vec::encode(STANDARD_TABLE, input.as_bytes()) {
-            Some(result) => result,
-            None => panic!("base64 encode fails for idx={}", idx),
-        };
+        let base64 = based64::vec::encode(STANDARD_TABLE, input.as_bytes());
         assert_eq!(base64.len(), output.len());
         assert_eq!(base64, output.as_bytes());
 
@@ -178,7 +175,7 @@ fn verify_encode_to_vec_safety() {
     for idx in 1..src_buffer.len() {
         let src = &mut src_buffer[idx..];
         getrandom::getrandom(src).expect("Random should work for fuck sake");
-        let base64 = based64::vec::encode(STANDARD_TABLE, src).expect("ENCODE");
+        let base64 = based64::vec::encode(STANDARD_TABLE, src);
         let original = based64::vec::decode(STANDARD_TABLE, &base64).expect("DECODE");
         assert_eq!(src, original);
     }

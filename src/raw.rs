@@ -9,7 +9,7 @@ fn unlikely_false() -> bool {
     false
 }
 
-pub(crate) fn encode_inner(table: &[u8; 64], src: &[u8], dst: NonNull<u8>, len: &mut usize) -> bool {
+pub(crate) fn encode_inner(table: &[u8; 64], src: &[u8], dst: NonNull<u8>, len: &mut usize) {
     let mut it = src.as_ptr();
     let it_end = unsafe {
         it.add(src.len())
@@ -75,7 +75,6 @@ pub(crate) fn encode_inner(table: &[u8; 64], src: &[u8], dst: NonNull<u8>, len: 
     }
 
     *len = cursor as usize - dst.as_ptr() as usize;
-    true
 }
 
 #[inline]
@@ -101,7 +100,8 @@ pub unsafe fn encode(table: &[u8; 64], src: &[u8], dst: NonNull<u8>, len: &mut u
         return false;
     }
 
-    encode_inner(table, src, dst, len)
+    encode_inner(table, src, dst, len);
+    true
 }
 
 pub(crate) fn decode_inner(table: &[u8; 64], mut src: &[u8], dst: NonNull<u8>, len: &mut usize) -> bool {
