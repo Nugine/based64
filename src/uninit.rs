@@ -19,7 +19,7 @@ use super::Codec;
 pub fn encode(table: &[u8; 64], src: &[u8], dst: &mut [mem::MaybeUninit<u8>]) -> Option<usize> {
     let mut len = dst.len();
     let dst = unsafe {
-        ptr::NonNull::new_unchecked(dst.as_ptr() as *mut u8)
+        ptr::NonNull::new_unchecked(dst.as_mut_ptr() as *mut u8)
     };
     match unsafe { super::raw::encode(table, src, dst, &mut len) } {
         true => Some(len),
@@ -43,7 +43,7 @@ pub fn encode(table: &[u8; 64], src: &[u8], dst: &mut [mem::MaybeUninit<u8>]) ->
 pub fn decode(table: &[u8; 64], src: &[u8], dst: &mut [mem::MaybeUninit<u8>]) -> Option<usize> {
     let mut len = dst.len();
     let dst = unsafe {
-        ptr::NonNull::new_unchecked(dst.as_ptr() as *mut u8)
+        ptr::NonNull::new_unchecked(dst.as_mut_ptr() as *mut u8)
     };
     match unsafe { super::raw::decode(table, src, dst, &mut len) } {
         true => Some(len),
@@ -84,7 +84,7 @@ impl<'a> Codec<'a> {
     pub fn decode_to_uninit(&self, src: &[u8], dst: &mut [mem::MaybeUninit<u8>]) -> Option<usize> {
         let mut len = dst.len();
         let dst = unsafe {
-            ptr::NonNull::new_unchecked(dst.as_ptr() as *mut u8)
+            ptr::NonNull::new_unchecked(dst.as_mut_ptr() as *mut u8)
         };
         match unsafe { self.decode_to_raw(src, dst, &mut len) } {
             true => Some(len),

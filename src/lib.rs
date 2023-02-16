@@ -71,8 +71,6 @@ const fn build_reverse_table(table: &[u8; 64]) -> [i8; REVERSE_TABLE_SIZE] {
     reverse_table
 }
 
-
-
 #[inline(always)]
 ///Returns number of bytes necessary to encode input of provided size (including padding).
 ///
@@ -146,7 +144,6 @@ pub fn decode(table: &[u8; 64], src: &[u8], dst: &mut [u8]) -> Option<usize> {
         uninit::decode(table, src, mem::transmute(dst))
     }
 }
-
 
 ///BASE64 codec
 #[derive(Copy, Clone)]
