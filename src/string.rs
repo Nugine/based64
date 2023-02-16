@@ -18,7 +18,7 @@ use super::{Codec, vec, assert_valid_character_table};
 #[inline]
 pub fn encode(table: &[u8; 64], src: &[u8]) -> String {
     //User must supply valid table for string conversion to be valid
-    debug_assert!(assert_valid_character_table(table));
+    assert!(assert_valid_character_table(table));
 
     let result = vec::encode(table, src);
 

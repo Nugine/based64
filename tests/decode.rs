@@ -71,6 +71,7 @@ fn should_handle_decode_padding_only() {
     }
 }
 
+#[cfg(feature = "alloc")]
 #[test]
 fn should_decode() {
     const INPUT: [(&str, &str); 7] = [
@@ -94,6 +95,7 @@ fn should_decode() {
 
 }
 
+#[cfg_attr(miri, ignore)] // too slow
 #[cfg(feature = "alloc")]
 #[test]
 fn should_decode_big_unpadded() {
