@@ -64,3 +64,14 @@ jobs:
       env:
         CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: "valgrind --leak-check=full"
       run: cargo test --release --features alloc
+
+  miri:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
+        with: 
+          components: miri
+      - run: |
+          cargo miri test --features alloc
+          cargo miri test --release --features alloc

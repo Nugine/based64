@@ -155,6 +155,7 @@ fn should_encode_fail_all_ascii_with_default_table_on_buffer_overflow() {
     }
 }
 
+#[cfg_attr(miri, ignore)] // too slow
 #[test]
 fn verify_encode_safety() {
     let mut src_buffer = [0u8; 1000];
@@ -168,6 +169,7 @@ fn verify_encode_safety() {
     }
 }
 
+#[cfg_attr(miri, ignore)] // too slow
 #[cfg(feature = "alloc")]
 #[test]
 fn verify_encode_to_vec_safety() {
